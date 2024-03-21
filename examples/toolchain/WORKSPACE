@@ -1,0 +1,52 @@
+workspace(name = "e2e_core")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_nodejs",
+    sha256 = "4537c08222a171bf9d7f96bab7da04daa986ca1386c035daf8a54fbeeb6abdf2",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.0.1/rules_nodejs-core-5.0.1.tar.gz"],
+)
+
+# Note: skylib 1.1.1 has some bug on Windows with diff_test, which we use in this example
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "afbe4d9d033c007940acd24bb9becf1580a0280ae0b2ebbb5a7cb12912d2c115",
+    strip_prefix = "bazel-skylib-ffad33e9bfc60bdfa98292ca655a4e7035792046",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/ffad33e9bfc60bdfa98292ca655a4e7035792046.tar.gz"],
+)
+
+load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
+
+# The order matters because Bazel will provide the first registered toolchain when a rule asks Bazel to select it
+# This applies to the resolved_toolchain
+nodejs_register_toolchains(
+    name = "node16",
+    node_version = "16.5.0",
+)
+
+nodejs_register_toolchains(
+    name = "node15",
+    node_version = "15.14.0",
+)
+
+http_archive(
+    name = "npm_acorn-8.5.0",
+    build_file_content = """
+load("@rules_nodejs//third_party/github.com/bazelbuild/bazel-skylib:rules/copy_file.bzl", "copy_file")
+
+# Turn a source directory into a TreeArtifact for RBE-compat
+copy_file(
+    name = "npm_acorn-8.5.0",
+    src = "package",
+    # This attribute comes from rules_nodejs patch of
+    # https://github.com/bazelbuild/bazel-skylib/pull/323
+    is_directory = True,
+    # We must give this as the directory in order for it to appear on NODE_PATH
+    out = "acorn",
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "d8f9d40c4656537a60bf0c6daae6f0553f54df5ff2518f86464b7c785f20376b",
+    urls = ["https://registry.npmjs.org/acorn/-/acorn-8.5.0.tgz"],
+)

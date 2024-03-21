@@ -1,0 +1,9 @@
+{
+    "private": true,
+    "peerDependency": {
+        "semver": ">=5.0.0"
+    },
+    "devDependencies": {
+        "smallest": "1.0.1"
+    }
+}
